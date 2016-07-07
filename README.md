@@ -58,7 +58,4 @@ a complete solution. Let me know if you want me to Kickstart this.
 
 Stavros
 
-P.S. This is what you do with this:
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/h-SKXioq_Yg"
-frameborder="0" allowfullscreen></iframe>
+P.S. [This is what you do with this](https://www.youtube.com/embed/h-SKXioq_Yg)
