@@ -1,0 +1,7 @@
+.pioenvs/
+.sconsign.dblite
+*.bak
+*-bak
+*.pyc
+_autosave-*
+build.sh

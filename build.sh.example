@@ -1,0 +1,9 @@
+#!/bin/bash
+
+export OTA_PASS="make up something good"
+export PLATFORMIO_SRC_BUILD_FLAGS="'-DWIFI_PASS=\"your wifi password\"' '-DWIFI_SSID=\"your ssid\"' '-DMQTT_SERVER=\"your mqtt server\"' '-DOTA_PASS=\"$OTA_PASS\"' '-DPROJECT_NAME=\"gameleds\"' '-DINSTANCE_NAME=\"main\"'"
+
+# Comment this out for local flashing.
+export PLATFORMIO_UPLOAD_FLAGS="-a $OTA_PASS"
+
+platformio run --target upload
