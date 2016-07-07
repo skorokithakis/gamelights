@@ -13,6 +13,7 @@ Vcc, R, G, B (like mine).
 This controller can currently be controlled through MQTT and UDP (with
 autodiscovery). Pull requests are welcome.
 
+
 The PCB
 -------
 
@@ -32,6 +33,21 @@ from DirtyPCBs. You will need:
 
 Solder all that on the PCB, and you have your very own WiFi-enabled LED
 controller!
+
+
+Building the code
+-----------------
+
+To build the code, just install [PlatformIO](http://platformio.org/) and type:
+
+```
+platformio run -t upload
+```
+
+Or, to populate all your secret variables without committing them, use the
+`build.sh.example` script I have included. Just rename it to `build.sh`, put
+your secret keys in and run it.
+
 
 Other stuff
 -----------
