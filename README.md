@@ -1,10 +1,11 @@
 ﻿Gameleds
 ========
 
+<img align="right" src="misc/images/front.png" width="200px" />
+
 [![build
 status](https://gitlab.com/skorokithakis/gamelights/badges/master/build.svg)](https://gitlab.com/skorokithakis/gamelights/commits/master)
 
-<img style="float: right" src="misc/images/front.png" width="300px" />
 
 Gameleds is a WiFi-enabled RGB LED strip controller. It's meant to drive my 12V
 5050 LEDs, but can work with any voltage LEDs, as long as their connectors are
