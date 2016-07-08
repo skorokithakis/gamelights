@@ -67,7 +67,11 @@ Other stuff
 
 Since many of my friends have gone apeshit over having lights pulse and follow
 and do crazy stuff with their games, I may make a product out of this and sell
-a complete solution. Let me know if you want me to Kickstart this.
+a complete solution. [Let me know](https://twitter.com/stavros) if you want me
+to Kickstart this.
+
+Also, please leave issues and other feedback on this project's [Gitlab
+tracker](https://gitlab.com/skorokithakis/gamelights/issues).
 
 Stavros
 
