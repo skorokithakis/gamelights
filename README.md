@@ -75,4 +75,4 @@ tracker](https://gitlab.com/skorokithakis/gamelights/issues).
 
 Stavros
 
-P.S. [This is what you do with this](https://www.youtube.com/embed/h-SKXioq_Yg)
+P.S. [This is what you do with this](https://www.youtube.com/watch?v=h-SKXioq_Yg).
