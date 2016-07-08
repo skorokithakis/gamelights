@@ -70,6 +70,7 @@ class Tween(object):
         rate = min(since / self._duration, 1)
 
         color = self._tween(rate)
+        color.luminance = color.luminance * 0.8
         return color
 
 
@@ -85,14 +86,15 @@ class SuperHexColorGenerator(object):
 
     def get_color(self):
         screen_color = self._capturer.capture(353, 264)
+        second_col = self._capturer.capture(1052, 271)
 
-        if self._state == self.CAPTURE and screen_color == Color("white"):
+        if self._state == self.CAPTURE and \
+           screen_color == Color("white") == second_col:
             self._state = self.PULSING
             self._tween = Tween(Color("red"), tween="quick cosine", duration=2)
 
         if self._state in (self.IDLE, self.CAPTURE):
-            second_col = self._capturer.capture(1052, 271)
-            if second_col == Color("d7d7d7"):
+            if second_col == Color("#d7d7d7"):
                 color = screen_color
                 self._state = self.CAPTURE
             else:
