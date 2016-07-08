@@ -4,7 +4,7 @@
 <img align="right" src="misc/images/front.png" width="200px" />
 
 [![build
-status](https://gitlab.com/skorokithakis/gamelights/badges/master/build.svg)](https://gitlab.com/skorokithakis/gamelights/commits/master)
+status](https://gitlab.com/stavros/gamelights/badges/master/build.svg)](https://gitlab.com/stavros/gamelights/commits/master)
 
 
 Gamelights is a WiFi-enabled RGB LED strip controller. It's meant to drive my 12V
@@ -71,7 +71,7 @@ a complete solution. [Let me know](https://twitter.com/stavros) if you want me
 to Kickstart this.
 
 Also, please leave issues and other feedback on this project's [Gitlab
-tracker](https://gitlab.com/skorokithakis/gamelights/issues).
+tracker](https://gitlab.com/stavros/gamelights/issues).
 
 Stavros
 
