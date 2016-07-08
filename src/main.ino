@@ -64,8 +64,6 @@ void connectWifi() {
 
         Serial.print("Wifi connected, IP address: ");
         Serial.println(WiFi.localIP());
-
-        setupmDNS();
     }
 }
 
@@ -183,12 +181,12 @@ void resetPins() {
 void setupmDNS() {
     char hostString[16] = {0};
 
-    sprintf(hostString, "LEDs_%06X", ESP.getChipId());
+    sprintf(hostString, "gameleds_%06X", ESP.getChipId());
 
     if (!MDNS.begin(hostString))
         Serial.println("Error setting up MDNS responder!");
 
-    MDNS.addService("leds", "udp", UDP_PORT);
+    MDNS.addService("gameleds", "udp", UDP_PORT);
 }
 
 void setup() {
@@ -200,6 +198,8 @@ void setup() {
 
     Serial.begin(115200);
     Serial.println("Booting");
+
+    setupmDNS();
 
     connectWifi();
 

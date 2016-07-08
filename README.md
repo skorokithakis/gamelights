@@ -1,5 +1,5 @@
-﻿Gameleds
-========
+﻿Gamelights
+==========
 
 <img align="right" src="misc/images/front.png" width="200px" />
 
@@ -7,7 +7,7 @@
 status](https://gitlab.com/skorokithakis/gamelights/badges/master/build.svg)](https://gitlab.com/skorokithakis/gamelights/commits/master)
 
 
-Gameleds is a WiFi-enabled RGB LED strip controller. It's meant to drive my 12V
+Gamelights is a WiFi-enabled RGB LED strip controller. It's meant to drive my 12V
 5050 LEDs, but can work with any voltage LEDs, as long as their connectors are
 Vcc, R, G, B (like mine).
 
@@ -48,6 +48,18 @@ platformio run -t upload
 Or, to populate all your secret variables without committing them, use the
 `build.sh.example` script I have included. Just rename it to `build.sh`, put
 your secret keys in and run it.
+
+
+Helper scripts
+--------------
+
+The repository also includes some helper scripts:
+
+* `send.py`: This is both a command-line script and a module. You can use it to
+  send your own colors to the controller (see the command line for details on
+  how to use it).
+* `capture.py`: This script is an experiment that will read the screen for Super
+  Hexagon and mirror the colors in the game to the gamelights controllers.
 
 
 Other stuff
