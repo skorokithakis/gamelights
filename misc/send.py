@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import socket
+import re
 import struct
 import argparse
 try:
@@ -72,13 +73,16 @@ if __name__ == "__main__":
     parser.add_argument('color', help="the hex color to send.")
     parser.add_argument('-m', '--mqtt-hostname',
                         help='specify the MQTT server hostname.')
+    parser.add_argument('-u', '--udp-ips',
+                        help='specify the list of UDP IPs to send to.')
 
     args = parser.parse_args()
 
-    udp_ips = []
-    if not args.mqtt_hostname:
+    udp_ips = re.split("[, ]", args.udp_ips) if args.udp_ips else None
+    if not args.mqtt_hostname and not udp_ips:
         print("Discovering Gamelights controllers...")
         udp_ips = discover_leds()
+    print(udp_ips)
 
     leds = LEDs(mqtt_hostname=args.mqtt_hostname, udp_ips=udp_ips)
 

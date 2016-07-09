@@ -102,8 +102,8 @@ class SuperHexColorGenerator(object):
         self._tween = None
 
     def get_color(self):
-        screen_color = self._capturer.capture(134, 59)
-        second_col = self._capturer.capture(1706, 75)
+        screen_color = self._capturer.capture(93, 42)
+        second_col = self._capturer.capture(1208, 52)
 
         if self._state == self.CAPTURE and \
            screen_color == Color("white") == second_col:
