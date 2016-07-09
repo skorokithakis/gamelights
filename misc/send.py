@@ -38,9 +38,10 @@ def discover_leds(timeout=2):
 
 
 class LEDs(object):
-    def __init__(self, mqtt_hostname=None, udp_ips=[]):
+    def __init__(self, mqtt_hostname=None, mqtt_name="main", udp_ips=[]):
         self._mqtt_hostname = mqtt_hostname
         self._udp_ips = udp_ips
+        self._mqtt_name = mqtt_name
 
         if self._mqtt_hostname:
             self.client = mqtt.Client()
@@ -56,7 +57,7 @@ class LEDs(object):
             self._socket.sendto(message, (ip, 19872))
 
         if self._mqtt_hostname:
-            self.client.publish("leds/main/command", message)
+            self.client.publish("gameleds/%s/command" % self._mqtt_name, message)
 
 
 def hex_to_rgb(value):
@@ -71,6 +72,8 @@ def hex_to_rgb(value):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Send some colors.')
     parser.add_argument('color', help="the hex color to send.")
+    parser.add_argument('-n', '--name',
+                        help='specify the Gamelights controller name, for MQTT.')
     parser.add_argument('-m', '--mqtt-hostname',
                         help='specify the MQTT server hostname.')
     parser.add_argument('-u', '--udp-ips',
@@ -78,13 +81,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    udp_ips = re.split("[, ]", args.udp_ips) if args.udp_ips else None
+    udp_ips = re.split("[, ]", args.udp_ips) if args.udp_ips else []
     if not args.mqtt_hostname and not udp_ips:
         print("Discovering Gamelights controllers...")
         udp_ips = discover_leds()
-    print(udp_ips)
 
-    leds = LEDs(mqtt_hostname=args.mqtt_hostname, udp_ips=udp_ips)
+    leds = LEDs(
+        mqtt_hostname=args.mqtt_hostname,
+        mqtt_name=args.name,
+        udp_ips=udp_ips,
+    )
 
     rgb = hex_to_rgb(args.color)
     r, g, b = [col * 4 for col in rgb]

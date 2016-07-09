@@ -1,4 +1,4 @@
-#include "PubSubClient.h"
+#include <AsyncMqttClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266mDNS.h>
@@ -43,7 +43,7 @@ char COMMAND_TOPIC[] = PROJECT_NAME "/" INSTANCE_NAME "/command";
 char STATE_TOPIC[] = PROJECT_NAME "/" INSTANCE_NAME "/state";
 char LOG_TOPIC[] = PROJECT_NAME "/" INSTANCE_NAME "/log";
 
-PubSubClient client(wclient);
+AsyncMqttClient mqttClient;
 
 
 void color(int r, int g, int b) {
@@ -53,18 +53,74 @@ void color(int r, int g, int b) {
 }
 
 
-void connectWifi() {
-    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        resetPins();
-        WiFi.mode(WIFI_STA);
-        while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-            WiFi.begin(WIFI_SSID, WIFI_PASS);
-            Serial.println("Connecting to wifi...");
-        }
+void onMqttConnect() {
+    Serial.println("Connected to MQTT.");
+    mqttClient.subscribe(COMMAND_TOPIC, 2);
+    mqttPublish(LOG_TOPIC, "Connected.");
+}
 
-        Serial.print("Wifi connected, IP address: ");
-        Serial.println(WiFi.localIP());
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+    mqttClient.connect();
+}
+
+
+void onMqttMessage(char* topic, char* payload, uint8_t qos, size_t len, size_t index, size_t total) {
+    payload[len] = '\0';
+    parseCommand((char *)payload);
+}
+
+
+void mqttPublish(String topic, String payload) {
+    char chPayload[500];
+    char chTopic[100];
+
+    if (!mqttClient.connected()) {
+        return;
     }
+
+    topic.toCharArray(chTopic, 100);
+    ("(" + String(millis()) + " - " + WiFi.localIP().toString() + ") " + INSTANCE_NAME + ": " + payload).toCharArray(chPayload, 100);
+    mqttClient.publish(chTopic, 0, false, chPayload, 0);
+}
+
+
+void connectMQTT() {
+    Serial.println("Connecting to MQTT...");
+
+    mqttClient.onConnect(onMqttConnect);
+    mqttClient.onDisconnect(onMqttDisconnect);
+    mqttClient.onMessage(onMqttMessage);
+
+    mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
+    mqttClient.setClientId(PROJECT_NAME "/" INSTANCE_NAME);
+
+    mqttClient.connect();
+}
+
+
+// Receive a message from MQTT and act on it.
+void mqttCallback(char* chTopic, byte* chPayload, unsigned int length) {
+    chPayload[length] = '\0';
+    parseCommand((char *)chPayload);
+}
+
+
+void connectWifi() {
+    if (WiFi.waitForConnectResult() == WL_CONNECTED) {
+        return;
+    }
+
+    resetPins();
+    WiFi.persistent(false);
+    WiFi.mode(WIFI_STA);
+    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+        WiFi.begin(WIFI_SSID, WIFI_PASS);
+        Serial.println("Connecting to wifi...");
+    }
+
+    Serial.print("Wifi connected, IP address: ");
+    Serial.println(WiFi.localIP());
 }
 
 
@@ -73,19 +129,19 @@ void parseCommand(char* command) {
     int i = 0;
     char *saveptr;
     char* text = strtok_r(command, ", ", &saveptr);
-    while(text != NULL){
-        switch(i) {
-            case 0:
-                r = atoi(text);
-                break;
-            case 1:
-                g = atoi(text);
-                break;
-            case 2:
-                b = atoi(text);
-                break;
-            default:
-                return;
+    while (text != NULL) {
+        switch (i) {
+        case 0:
+            r = atoi(text);
+            break;
+        case 1:
+            g = atoi(text);
+            break;
+        case 2:
+            b = atoi(text);
+            break;
+        default:
+            return;
         }
         i++;
         text = strtok_r(NULL, ", ", &saveptr);
@@ -98,59 +154,14 @@ void readUDP() {
     byte packetBuffer[512];
     int noBytes = Udp.parsePacket();
 
-    if (noBytes <= 0) return;
+    if (noBytes <= 0) {
+        return;
+    }
 
     Udp.read(packetBuffer, noBytes);
     packetBuffer[noBytes] = '\0';
 
     parseCommand((char *)packetBuffer);
-}
-
-
-void mqttPublish(String topic, String payload) {
-    char chPayload[500];
-    char chTopic[100];
-
-    if (!client.connected()) {
-        return;
-    }
-
-    topic.toCharArray(chTopic, 100);
-    ("(" + String(millis()) + " - " + WiFi.localIP().toString() + ") " + INSTANCE_NAME + ": " + payload).toCharArray(chPayload, 100);
-    client.publish(chTopic, chPayload);
-}
-
-
-// Receive a message from MQTT and act on it.
-void mqttCallback(char* chTopic, byte* chPayload, unsigned int length) {
-    chPayload[length] = '\0';
-    parseCommand((char *)chPayload);
-}
-
-
-void connectMQTT() {
-    if (client.connected()) {
-        client.loop();
-    } else {
-        client.setServer(MQTT_SERVER, MQTT_PORT);
-        client.setCallback(mqttCallback);
-
-        resetPins();
-        int retries = 4;
-        Serial.println("\nConnecting to MQTT...");
-        while (!client.connect(INSTANCE_NAME) && retries--) {
-            delay(500);
-            Serial.println("Retry...");
-        }
-
-        if (!client.connected()) {
-            Serial.println("\nfatal: MQTT server connection failed..");
-        }
-
-        Serial.println("Connected.");
-        client.subscribe(COMMAND_TOPIC);
-        mqttPublish(LOG_TOPIC, "Connected.");
-    }
 }
 
 
@@ -181,8 +192,9 @@ void setupmDNS() {
 
     sprintf(hostString, "gameleds_%06X", ESP.getChipId());
 
-    if (!MDNS.begin(hostString))
+    if (!MDNS.begin(hostString)) {
         Serial.println("Error setting up MDNS responder!");
+    }
 
     MDNS.addService("gameleds", "udp", UDP_PORT);
 }
@@ -208,32 +220,39 @@ void setup() {
     ArduinoOTA.setHostname(PROJECT_NAME "-" INSTANCE_NAME);
 
     ArduinoOTA.onStart([]() {
-            resetPins();
-            Serial.println("Start");
-            });
+        resetPins();
+        Serial.println("Start");
+    });
     ArduinoOTA.onEnd([]() {
-            Serial.println("\nEnd");
-            });
+        Serial.println("\nEnd");
+    });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-            });
+        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
     ArduinoOTA.onError([](ota_error_t error) {
-            Serial.printf("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR) Serial.println("End Failed");
-            });
+        Serial.printf("Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) {
+            Serial.println("Auth Failed");
+        } else if (error == OTA_BEGIN_ERROR) {
+            Serial.println("Begin Failed");
+        } else if (error == OTA_CONNECT_ERROR) {
+            Serial.println("Connect Failed");
+        } else if (error == OTA_RECEIVE_ERROR) {
+            Serial.println("Receive Failed");
+        } else if (error == OTA_END_ERROR) {
+            Serial.println("End Failed");
+        }
+    });
     ArduinoOTA.begin();
 }
 
 void flashLED() {
     // Blink for the first minute, just as a health test.
-    if (millis() % 1000 > 100 || millis() > 60 * 1000)
+    if (millis() % 1000 > 100 || millis() > 60 * 1000) {
         digitalWrite(LED_PIN, HIGH);
-    else
+    } else {
         digitalWrite(LED_PIN, LOW);
+    }
 }
 
 // the loop function runs over and over again forever
