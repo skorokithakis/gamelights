@@ -7,32 +7,39 @@ from math import cos, radians
 from colour import Color
 from gtk import gdk
 from PIL import Image
+from PIL.ImageStat import Stat
 from send import LEDs, discover_leds
 
 
 class Capturer(object):
     "A class that will take a screenshot of a single pixel on a GTK system."
-    def __init__(self):
-        self._window = gdk.get_default_root_window()
-        self._pb = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8, 1, 1)
+    def __init__(self, w=None, h=None):
+        self._w = w if w else gdk.screen_width()
+        self._h = h if h else gdk.screen_height()
 
-    def capture(self, x, y):
-        """Capture a pixel from the screen."""
+        self._window = gdk.get_default_root_window()
+        self._pb = gdk.Pixbuf(gdk.COLORSPACE_RGB, False, 8, self._w, self._h)
+
+    def _screenshot(self, x, y):
         pb = self._pb.get_from_drawable(
                 self._window,
                 self._window.get_colormap(),
                 x, y,
                 0, 0,
-                1, 1)
-        pixels = Image.frombuffer(
+                self._w, self._h)
+        image = Image.frombuffer(
                 'RGB',
-                (1, 1),
+                (self._w, self._h),
                 pb.get_pixels(),
                 'raw',
                 'RGB',
                 pb.get_rowstride(),
-                1).load()
-        color = Color(rgb=[c / 255.0 for c in pixels[0, 0]])
+                1)
+        return image
+
+    def capture(self, x, y):
+        """Capture a pixel from the screen."""
+        color = Color(rgb=[c / 255.0 for c in self._screenshot(x, y).getpixel((0, 0))])
         return color
 
 
@@ -70,7 +77,17 @@ class Tween(object):
         rate = min(since / self._duration, 1)
 
         color = self._tween(rate)
-        color.luminance = color.luminance * 0.8
+        return color
+
+
+class NaiveColorGenerator(object):
+    "An averaging filter."
+    def __init__(self):
+        self._capturer = Capturer()
+
+    def get_color(self):
+        image = self._capturer._screenshot(0, 0)
+        color = Color(rgb=[c / 255.0 for c in Stat(image).mean])
         return color
 
 
@@ -80,13 +97,13 @@ class SuperHexColorGenerator(object):
     IDLE = 3
 
     def __init__(self):
-        self._capturer = Capturer()
+        self._capturer = Capturer(1, 1)
         self._state = self.CAPTURE
         self._tween = None
 
     def get_color(self):
-        screen_color = self._capturer.capture(353, 264)
-        second_col = self._capturer.capture(1052, 271)
+        screen_color = self._capturer.capture(134, 59)
+        second_col = self._capturer.capture(1706, 75)
 
         if self._state == self.CAPTURE and \
            screen_color == Color("white") == second_col:
@@ -111,17 +128,23 @@ class SuperHexColorGenerator(object):
 def main():
     print("Discovering gamelights controllers...")
     ips = discover_leds()
-    print("Found %s controllers." % len(ips))
+    print("Found %s controllers: %s." % (len(ips), ", ".join(ips)))
     if not ips:
         sys.exit(1)
 
     leds = LEDs(udp_ips=ips)
-    fps = 60
+    fps = 30
     colorgen = SuperHexColorGenerator()
+    last_color = None
     while True:
         color = colorgen.get_color()
-        r, g, b = [int(x * 255) for x in color.get_rgb()]
-        leds.send(r, g, b)
+        if last_color == color:
+            continue
+        else:
+            last_color = color
+            print color
+            r, g, b = [int(x * 255) for x in color.get_rgb()]
+            leds.send(r, g, b)
         time.sleep(1.0/fps)
 
 

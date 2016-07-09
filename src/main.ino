@@ -144,9 +144,7 @@ void connectMQTT() {
         }
 
         if (!client.connected()) {
-            Serial.println("\nfatal: MQTT server connection failed. Rebooting.");
-            delay(200);
-            ESP.restart();
+            Serial.println("\nfatal: MQTT server connection failed..");
         }
 
         Serial.println("Connected.");
@@ -202,6 +200,7 @@ void setup() {
     setupmDNS();
 
     connectWifi();
+    connectMQTT();
 
     Udp.begin(UDP_PORT);
 
@@ -240,7 +239,6 @@ void flashLED() {
 // the loop function runs over and over again forever
 void loop() {
     connectWifi();
-    connectMQTT();
     readUDP();
     flashLED();
     ArduinoOTA.handle();
