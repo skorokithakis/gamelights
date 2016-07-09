@@ -127,7 +127,7 @@ class SuperHexColorGenerator(object):
 
 def main():
     print("Discovering gamelights controllers...")
-    ips = discover_leds()
+    ips = discover_leds(5)
     print("Found %s controllers: %s." % (len(ips), ", ".join(ips)))
     if not ips:
         sys.exit(1)
@@ -139,7 +139,9 @@ def main():
     while True:
         color = colorgen.get_color()
         if last_color == color:
-            continue
+            # This is because "last_color != color" is always True, due to a
+            # bug.
+            pass
         else:
             last_color = color
             print color
